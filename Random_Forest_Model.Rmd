@@ -1,0 +1,78 @@
+---
+title: "Predicting the RMSD from Solvent Accessible Surface Area, Radius of Gyration and Potential Energy"
+author: "Michele Silva"
+date: "05/17/2015"
+output: html_document
+---
+
+We fit a random forest of 300 trees to our data, predicting the RMSD from Solvent Accessible Surface Area (SASA), Radius of Gyration and Potential Energy.
+
+```{r, echo=FALSE, warning=FALSE}
+library(randomForest)
+library(caret)
+```
+
+## 282 K Simulation Analysis
+
+Load and sample the data for training:
+
+```{r, cache=TRUE}
+output <- read.csv('simulation_282/output.csv')
+InTrain<-createDataPartition(y=output$RMSD, p=0.1, list=FALSE)
+training <- output[InTrain,c('Potential.Energy',  'SASA', 'Radius.of.Gyration', 'RMSD')]
+```
+
+Train a random forest consisting of 300 trees.
+
+```{r, cache=TRUE}
+rf_model <- randomForest(RMSD~.,data=training, ntree=300, importance=TRUE)
+print(rf_model)
+plot(rf_model, main="Random Forest Model for the 282 K simulation")
+
+#mds <- cmdscale(1 - rf_model$proximity)
+#plot(mds, col = training$RMSD, xlab="Proximity", ylab="Proximity", main="Proximity measure between data points")
+```
+
+It is possible to see that only a small fraction of the variance is captured by the model.
+Also, increasing the number of trees is not improving the error. This is an indication that these variables alone are not sufficient to predict the RMSD.
+
+Plot the variable importance, to visualize what contributes the most to the model.
+```{r, cache=TRUE}
+colnames(rf_model$importance) <- c("% Increase in MSE", "Increase in Node Purity")
+rownames(rf_model$importance) <- c("Potential Energy", "SASA", "Radius of Gyration")
+varImpPlot(rf_model, main="")
+```
+
+The most relevant predictor variable is Radius of Gyration, followed by SASA. The potential energy had only a small impact on the prediction.
+
+## 325 K Simulation Analysis
+
+Load the data and samples 10% for training:
+
+```{r, cache=TRUE}
+output <- read.csv('simulation_325/output.csv')
+InTrain<-createDataPartition(y=output$RMSD, p=0.1, list=FALSE)
+training <- output[InTrain,c('Potential.Energy',  'SASA', 'Radius.of.Gyration', 'RMSD')]
+```
+
+Train a random forest consisting of 300 trees.
+
+```{r, cache=TRUE}
+rf_model <- randomForest(RMSD~.,data=training, ntree=300, importance=TRUE)
+print(rf_model)
+plot(rf_model, main="Random Forest Model for the 325 K simulation")
+
+#mds <- cmdscale(1 - rf_model$proximity)
+#plot(mds, col = training$RMSD, xlab="Proximity", ylab="Proximity", main="Proximity measure between data points")
+```
+
+Although a greater amount of the variance was captured by the model at 325 K, it is still far from being a good predictor. From the proximity plot, we can see it is not possible to clearly separate the RMSDs if we take only SASA, radius of gyration and potential energy. It is clear other variables are needed.
+
+Plot the variable importance, to visualize what contributes the most to the model.
+```{r, cache=TRUE}
+colnames(rf_model$importance) <- c("% Increase in MSE", "Increase in node purity")
+rownames(rf_model$importance) <- c("Potential Energy", "SASA", "Radius of Gyration")
+varImpPlot(rf_model, main="")
+```
+
+Differently from the 282 K simulation, two importance metrics alternate SASA and the radius of gyration as the most importante variable, showing that both have equivalent importance to the prediction. Similarly to the previous simulation, the potential energy had a only small impact.

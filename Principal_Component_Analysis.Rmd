@@ -1,0 +1,31 @@
+---
+title: "Principal Component Analysis of the Trp-Cage MD Simulation"
+author: "Michele Silva"
+date: "05/04/2015"
+output: html_document
+---
+
+```{r, cache=TRUE}
+library(bio3d)
+traj <- read.ncdf("simulation_325/trajectory.netcdf")
+pdb <- read.pdb("../1L2Y_Conf_01.pdb")
+print(pdb$xyz)
+print(traj)
+```
+
+```{r, cache=TRUE}
+xyz <- fit.xyz(
+  fixed=pdb$xyz, mobile=traj,
+  fixed.inds=backbone.inds$xyz,
+  mobile.inds=backbone.inds$xyz
+)
+pc <- pca.xyz(xyz)
+plot(pc, col=bwr.colors(nrow(xyz)))
+```
+
+```{r, cache=TRUE}
+p1 <- mktrj.pca(pc, pc=1, b=pc$au[,1], file="pc1.pdb")
+p2 <- mktrj.pca(pc, pc=2,b=pc$au[,2], file="pc2.pdb")
+p3 <- mktrj.pca(pc, pc=3,b=pc$au[,2], file="pc3.pdb")
+p4 <- mktrj.pca(pc, pc=4,b=pc$au[,2], file="pc4.pdb")
+```
