@@ -14,6 +14,7 @@ print(traj)
 ```
 
 ```{r, cache=TRUE}
+backbone.inds <- atom.select(pdb, "backbone", elety="CA")
 xyz <- fit.xyz(
   fixed=pdb$xyz, mobile=traj,
   fixed.inds=backbone.inds$xyz,
